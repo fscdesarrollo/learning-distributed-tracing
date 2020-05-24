@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  star:
+    image: ${DOCKER_REGISTRY-}star
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development"
+    ports:
+      - "4000:80"
+    build:
+      context: .
+      dockerfile: src/Learning.DistributedTracing.Star.Api/Dockerfile
+    networks:
+      - learning
+    depends_on:
+      - wars
+      - jaeger
+
+  wars:
+    image: ${DOCKER_REGISTRY-}wars
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development"
+    ports:
+      - "5000:80"
+    build:
+      context: .
+      dockerfile: src/Learning.DistributedTracing.Wars.Api/Dockerfile
+    networks:
+      - learning
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+    networks:
+      - learning
+  hotrod:
+    image: jaegertracing/example-hotrod:latest
+    ports: 
+      - "8080:8080"
+    command: ["all"]
+    environment:
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
+    networks:
+      - learning
+    depends_on:
+      - jaeger
+
+networks:
+  learning:
